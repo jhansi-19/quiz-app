@@ -13,13 +13,7 @@ const awsmobile = {
       signUpVerificationMethod: 'code',
       loginWith: {
         email: true,
-        oauth: {
-          domain: 'us-east-1dlkit6y7r.auth.us-east-1.amazoncognito.com',
-          scopes: ['email', 'openid', 'profile'],
-          redirectSignIn: ['https://dev.dk984uju67rhc.amplifyapp.com/'],
-          redirectSignOut: ['https://dev.dk984uju67rhc.amplifyapp.com/'],
-          responseType: 'code'
-        }
+        username: false
       }
     }
   },
