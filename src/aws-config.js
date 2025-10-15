@@ -10,7 +10,7 @@ const awsmobile = {
     userPoolId: 'us-east-1_DLkiT6Y7r',
     userPoolWebClientId: '2o27e8efr1t6hmm2gsc3l6aol6',
     oauth: {
-      domain: 'https://us-east-1dlkit6y7r.auth.us-east-1.amazoncognito.com', // e.g., quiz-app-pool.auth.us-east-1.amazoncognito.com
+      domain: 'us-east-1dlkit6y7r.auth.us-east-1.amazoncognito.com', // e.g., quiz-app-pool.auth.us-east-1.amazoncognito.com
       scope: ['email', 'openid', 'profile'],
       redirectSignIn: 'https://dev.dk984uju67rhc.amplifyapp.com/',
       redirectSignOut: 'https://dev.dk984uju67rhc.amplifyapp.com/',
