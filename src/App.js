@@ -5,6 +5,7 @@ import QuizList from './components/QuizList';
 import Quiz from './components/Quiz';
 import Scores from './components/Scores';
 import '@aws-amplify/ui-react/styles.css';
+import './aws-config';
 
 function App() {
   return (
