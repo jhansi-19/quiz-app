@@ -1,6 +1,6 @@
 import { Amplify } from 'aws-amplify';
 
-const isSecondaryRegion = window.location.hostname.includes('dev.<dr-app-id>.amplifyapp.com');
+const isSecondaryRegion = window.location.hostname.includes('dev.d2yww64gbp26rj.amplifyapp.com');
 
 const awsconfig = {
   Auth: {
