@@ -17,7 +17,7 @@ const awsconfig = {
   API: {
     REST: {
       quizApi: {
-        endpoint: 'https://api.quizapp.com/prod',
+        endpoint: 'https://poavf33mhl.execute-api.us-east-1.amazonaws.com/prod',
         region: isSecondaryRegion ? 'us-west-2' : 'us-east-1'
       }
     }
