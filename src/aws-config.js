@@ -1,5 +1,6 @@
-import { Amplify, Auth } from 'aws-amplify';
-import { API } from '@aws-amplify/api';
+import { Amplify } from 'aws-amplify';
+import { get, post, put, del } from 'aws-amplify/api';
+import { signIn, signOut, signUp, confirmSignUp, getCurrentUser } from 'aws-amplify/auth';
 
 // Primary (us-east-1) configurations
 const primaryConfig = {
@@ -48,34 +49,45 @@ const secondaryConfig = {
 // Configure Amplify with primary by default
 Amplify.configure(primaryConfig);
 
-// Override Amplify's API and Auth methods for automatic fallback
-const originalAPIGet = API.get;
-API.get = async (apiName, path, init) => {
+// Create wrapper functions for API calls with fallback
+export const apiGet = async (apiName, path, options = {}) => {
   try {
-    return await originalAPIGet(apiName, path, init); // Try primary
+    return await get({ apiName, path, options }).response;
   } catch (error) {
-    if (error.response && (error.response.status >= 500 || error.name === 'NetworkError')) {
+    if (error.response?.statusCode >= 500 || error.name === 'NetworkError') {
       console.log('API failure - switching to secondary region');
-      Amplify.configure(secondaryConfig); // Switch to secondary
-      return await originalAPIGet(apiName, path, init); // Retry with secondary
+      Amplify.configure(secondaryConfig);
+      return await get({ apiName, path, options }).response;
     }
     throw error;
   }
 };
 
-const originalAuthSignIn = Auth.signIn;
-Auth.signIn = async (username, password) => {
+export const apiPost = async (apiName, path, options = {}) => {
   try {
-    return await originalAuthSignIn(username, password); // Try primary
+    return await post({ apiName, path, options }).response;
+  } catch (error) {
+    if (error.response?.statusCode >= 500 || error.name === 'NetworkError') {
+      console.log('API failure - switching to secondary region');
+      Amplify.configure(secondaryConfig);
+      return await post({ apiName, path, options }).response;
+    }
+    throw error;
+  }
+};
+
+// Auth wrapper with fallback
+export const authSignIn = async (username, password) => {
+  try {
+    return await signIn({ username, password });
   } catch (error) {
     if (error.name === 'UserPoolNotConfiguredError' || error.name === 'NetworkError') {
       console.log('Auth failure - switching to secondary region');
-      Amplify.configure(secondaryConfig); // Switch to secondary
-      return await originalAuthSignIn(username, password); // Retry with secondary
+      Amplify.configure(secondaryConfig);
+      return await signIn({ username, password });
     }
     throw error;
   }
 };
 
-// Export for compatibility
 export default primaryConfig;
