@@ -39,7 +39,7 @@ const secondaryConfig = {
   API: {
     REST: {
       quizApi: {
-        endpoint: 'https://rpw2ot8deh.execute-api.us-west-2.amazonaws.com/prod'',  // Replace with your us-west-2 API Gateway ID
+        endpoint: 'https://rpw2ot8deh.execute-api.us-west-2.amazonaws.com/prod',  // Replace with your us-west-2 API Gateway ID
         region: 'us-west-2'
       }
     }
