@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { get } from '@aws-amplify/api';
+import { apiGet } from '../aws-config'; // Adjust path as needed
 import { Link } from 'react-router-dom';
 
 function Scores({ user }) {
@@ -19,18 +19,11 @@ function Scores({ user }) {
         const userId = user.username || user.attributes.sub;
         console.log('Fetching scores for user:', userId);
         
-        const response = await get({
-          apiName: 'quizApi',
-          path: `/scores?userId=${userId}`
-        }).response;
-
+        const response = await apiGet('quizApi', `/scores?userId=${userId}`);
         const data = await response.body.json();
         console.log('Scores data:', data);
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
+        if (data.error) throw new Error(data.error);
         setScores(data || []);
       } catch (err) {
         console.error('Error fetching scores:', err);
@@ -82,7 +75,6 @@ function Scores({ user }) {
 
           <div className="scores-list">
             {scores.map((score, index) => {
-              // Calculate correct answers if not stored
               const totalQuestions = score.answers ? Object.keys(score.answers).length : 0;
               const correctAnswers = Math.round((score.score / 100) * totalQuestions);
               
@@ -96,17 +88,11 @@ function Scores({ user }) {
                   </div>
                   <div className="score-details">
                     {totalQuestions > 0 && (
-                      <p>
-                        <strong>Correct Answers:</strong> {correctAnswers} / {totalQuestions}
-                      </p>
+                      <p><strong>Correct Answers:</strong> {correctAnswers} / {totalQuestions}</p>
                     )}
                     <p>
                       <strong>Completed:</strong> {new Date(score.completedAt).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </p>
                   </div>
