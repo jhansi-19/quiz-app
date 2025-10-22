@@ -1,26 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { get } from '@aws-amplify/api';
+import { apiGet } from '../aws-config'; // Adjust path as needed
 import { Link } from 'react-router-dom';
 
 function QuizList({ user }) {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // Added for debugging
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const response = await get({
-          apiName: 'quizApi',
-          path: '/quizzes'
-        }).response;
-        console.log('API Response:', response); // Debug raw response
+        const response = await apiGet('quizApi', '/quizzes');
+        console.log('API Response:', response);
         const data = await response.body.json();
-        console.log('Parsed Data:', data); // Debug parsed data
+        console.log('Parsed Data:', data);
         setQuizzes(data);
       } catch (err) {
         console.error('Error fetching quizzes:', err);
-        setError(err.message); // Capture error
+        setError(err.message);
       } finally {
         setLoading(false);
       }
