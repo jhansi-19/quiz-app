@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { get, post } from '@aws-amplify/api';
+import { apiGet, apiPost } from '../aws-config'; // Adjust path as needed
 import { useParams, useNavigate } from 'react-router-dom';
 
 function Quiz({ user }) {
@@ -17,20 +17,11 @@ function Quiz({ user }) {
     const fetchQuiz = async () => {
       try {
         console.log('Fetching quiz:', quizId);
-        const response = await get({
-          apiName: 'quizApi',
-          path: `/new-quizzes/${quizId}`
-        }).response;
-        
-        if (!response.body) {
-          throw new Error('No response body received');
-        }
+        const response = await apiGet('quizApi', `/new-quizzes/${quizId}`);
+        if (!response.body) throw new Error('No response body received');
         const data = await response.body.json();
         console.log('Quiz Data:', data);
-        
-        if (data.error) {
-          throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
         setQuiz({ ...data, questions: Array.isArray(data.questions) ? data.questions : [] });
       } catch (err) {
         console.error('Error fetching quiz:', err);
@@ -43,23 +34,15 @@ function Quiz({ user }) {
   }, [quizId]);
 
   const handleOptionChange = (questionId, selectedOption) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: selectedOption
-    }));
+    setAnswers(prev => ({ ...prev, [questionId]: selectedOption }));
   };
 
   const calculateScore = () => {
     if (!quiz || !quiz.questions) return 0;
-    
     let correctCount = 0;
     quiz.questions.forEach(question => {
-      // Match with 'answer' field from your schema (not 'correctAnswer')
-      if (answers[question.questionId] === question.answer) {
-        correctCount++;
-      }
+      if (answers[question.questionId] === question.answer) correctCount++;
     });
-    
     return {
       correctCount,
       totalQuestions: quiz.questions.length,
@@ -68,11 +51,7 @@ function Quiz({ user }) {
   };
 
   const handleSubmit = async () => {
-    // Check if all questions are answered
-    const unansweredQuestions = quiz.questions.filter(
-      q => !answers[q.questionId]
-    );
-    
+    const unansweredQuestions = quiz.questions.filter(q => !answers[q.questionId]);
     if (unansweredQuestions.length > 0) {
       alert(`Please answer all questions. ${unansweredQuestions.length} question(s) remaining.`);
       return;
@@ -82,27 +61,21 @@ function Quiz({ user }) {
     const scoreData = calculateScore();
     
     try {
-      // Submit to UserQuizProgress table
       console.log('Submitting score with data:', {
         userId: user?.username || user?.attributes?.sub || 'guest',
         quizId: quizId,
         score: scoreData.percentage
       });
 
-      const response = await post({
-        apiName: 'quizApi',
-        path: '/scores',
-        options: {
-          body: {
-            userId: user?.username || user?.attributes?.sub || 'guest',
-            quizId: quizId,
-            score: scoreData.percentage,
-            answers: answers,
-            completedAt: new Date().toISOString()
-          }
+      const response = await apiPost('quizApi', '/scores', {
+        body: {
+          userId: user?.username || user?.attributes?.sub || 'guest',
+          quizId: quizId,
+          score: scoreData.percentage,
+          answers: answers,
+          completedAt: new Date().toISOString()
         }
-      }).response;
-
+      });
       const data = await response.body.json();
       console.log('Score submission response:', data);
       
@@ -110,17 +83,9 @@ function Quiz({ user }) {
       setSubmitted(true);
     } catch (err) {
       console.error('Error submitting score:', err);
-      console.error('Error details:', {
-        message: err.message,
-        name: err.name,
-        stack: err.stack
-      });
-      
-      // Still show results even if submission fails
+      console.error('Error details:', { message: err.message, name: err.name, stack: err.stack });
       setResult(scoreData);
       setSubmitted(true);
-      
-      // Show more detailed error message
       const errorMsg = err.message || 'Unknown error';
       alert(`Quiz completed but score submission failed.\n\nError: ${errorMsg}\n\nPlease check:\n1. API Gateway has /score endpoint\n2. CORS is enabled\n3. API is deployed\n\nYour results are shown below.`);
     } finally {
@@ -128,90 +93,70 @@ function Quiz({ user }) {
     }
   };
 
-  const isQuestionCorrect = (question) => {
-    return answers[question.questionId] === question.answer;
-  };
+  const isQuestionCorrect = (question) => answers[question.questionId] === question.answer;
 
-  if (loading) {
-    return <div className="loading">Loading quiz...</div>;
-  }
+  if (loading) return <div className="loading">Loading quiz...</div>;
+  if (error) return (
+    <div className="error">
+      <p>Error: {error}</p>
+      <button onClick={() => navigate('/')}>Back to Quizzes</button>
+    </div>
+  );
+  if (!quiz) return <div className="error">Quiz not found</div>;
+  if (submitted && result) return (
+    <div className="quiz-container">
+      <div className="results-container">
+        <h2>Quiz Results</h2>
+        <div className="score-summary">
+          <h3>{quiz.title || 'Quiz'}</h3>
+          <p className="score-percentage">Your Score: {result.percentage}%</p>
+          <p className="score-detail">
+            {result.correctCount} out of {result.totalQuestions} correct
+          </p>
+        </div>
 
-  if (error) {
-    return (
-      <div className="error">
-        <p>Error: {error}</p>
-        <button onClick={() => navigate('/')}>Back to Quizzes</button>
-      </div>
-    );
-  }
-
-  if (!quiz) {
-    return <div className="error">Quiz not found</div>;
-  }
-
-  if (submitted && result) {
-    return (
-      <div className="quiz-container">
-        <div className="results-container">
-          <h2>Quiz Results</h2>
-          <div className="score-summary">
-            <h3>{quiz.title || 'Quiz'}</h3>
-            <p className="score-percentage">Your Score: {result.percentage}%</p>
-            <p className="score-detail">
-              {result.correctCount} out of {result.totalQuestions} correct
-            </p>
-          </div>
-
-          <div className="answers-review">
-            <h3>Review Your Answers</h3>
-            {quiz.questions.map((question, index) => {
-              const correct = isQuestionCorrect(question);
-              const userAnswer = answers[question.questionId];
-              
-              return (
-                <div key={question.questionId} className={`question-review ${correct ? 'correct' : 'incorrect'}`}>
-                  <h4>
-                    Question {index + 1}: {question.question}
-                    <span className="result-badge">
-                      {correct ? '✓ Correct' : '✗ Incorrect'}
-                    </span>
-                  </h4>
-                  <div className="options-review">
-                    {question.options.map((option, optIndex) => {
-                      const isUserAnswer = option === userAnswer;
-                      const isCorrectAnswer = option === question.answer;
-                      let className = 'option-review';
-                      
-                      if (isCorrectAnswer) {
-                        className += ' correct-answer';
-                      }
-                      if (isUserAnswer && !correct) {
-                        className += ' wrong-answer';
-                      }
-                      
-                      return (
-                        <div key={optIndex} className={className}>
-                          <span>{option}</span>
-                          {isCorrectAnswer && <span className="badge">Correct Answer</span>}
-                          {isUserAnswer && !isCorrectAnswer && <span className="badge">Your Answer</span>}
-                        </div>
-                      );
-                    })}
-                  </div>
+        <div className="answers-review">
+          <h3>Review Your Answers</h3>
+          {quiz.questions.map((question, index) => {
+            const correct = isQuestionCorrect(question);
+            const userAnswer = answers[question.questionId];
+            return (
+              <div key={question.questionId} className={`question-review ${correct ? 'correct' : 'incorrect'}`}>
+                <h4>
+                  Question {index + 1}: {question.question}
+                  <span className="result-badge">
+                    {correct ? '✓ Correct' : '✗ Incorrect'}
+                  </span>
+                </h4>
+                <div className="options-review">
+                  {question.options.map((option, optIndex) => {
+                    const isUserAnswer = option === userAnswer;
+                    const isCorrectAnswer = option === question.answer;
+                    let className = 'option-review';
+                    if (isCorrectAnswer) className += ' correct-answer';
+                    if (isUserAnswer && !correct) className += ' wrong-answer';
+                    return (
+                      <div key={optIndex} className={className}>
+                        <span>{option}</span>
+                        {isCorrectAnswer && <span className="badge">Correct Answer</span>}
+                        {isUserAnswer && !isCorrectAnswer && <span className="badge">Your Answer</span>}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
-          <div className="action-buttons">
-            <button onClick={() => navigate('/scores')}>View All Scores</button>
-            <button onClick={() => navigate('/')}>Back to Quizzes</button>
-            <button onClick={() => window.location.reload()}>Retake Quiz</button>
-          </div>
+        <div className="action-buttons">
+          <button onClick={() => navigate('/scores')}>View All Scores</button>
+          <button onClick={() => navigate('/')}>Back to Quizzes</button>
+          <button onClick={() => window.location.reload()}>Retake Quiz</button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="quiz-container">
