@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 function Scores({ user }) {
   const [scores, setScores] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,12 +20,17 @@ function Scores({ user }) {
         const userId = user.username || user.attributes.sub;
         console.log('Fetching scores for user:', userId);
         
-        const response = await apiGet('quizApi', `/scores?userId=${userId}`);
-        const data = await response.body.json();
-        console.log('Scores data:', data);
+        const [scoresResponse, leaderboardResponse] = await Promise.all([
+          apiGet('quizApi', `/scores?userId=${userId}`),
+          apiGet('quizApi', '/leaderboard')
+        ]);
+        const scoresData = await scoresResponse.body.json();
+        const leaderboardData = await leaderboardResponse.body.json();
 
-        if (data.error) throw new Error(data.error);
-        setScores(data || []);
+        if (scoresData.error) throw new Error(scoresData.error);
+        if (leaderboardData.error) throw new Error(leaderboardData.error);
+        setScores(scoresData || []);
+        setLeaderboard(leaderboardData || []);
       } catch (err) {
         console.error('Error fetching scores:', err);
         setError(err.message || 'Failed to load scores');
@@ -104,6 +110,34 @@ function Scores({ user }) {
             })}
           </div>
         </>
+      )}
+
+      <h2>Leaderboard</h2>
+      {leaderboard.length === 0 ? (
+        <p>No leaderboard data available yet.</p>
+      ) : (
+        <div className="leaderboard-container">
+          <table className="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>User ID</th>
+                <th>Score</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((entry, index) => (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{entry.userId}</td>
+                  <td>{entry.score}%</td>
+                  <td>{new Date(entry.completedAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <Link to="/" className="back-btn">Back to Quizzes</Link>
     </div>
