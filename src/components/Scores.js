@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiGet } from '../aws-config'; // Adjust path as needed
+import { apiGet } from '../aws-config';
 import { Link } from 'react-router-dom';
 
 function Scores({ user }) {
@@ -18,8 +18,6 @@ function Scores({ user }) {
         }
 
         const userId = user.username || user.attributes.sub;
-        console.log('Fetching scores for user:', userId);
-        
         const [scoresResponse, leaderboardResponse] = await Promise.all([
           apiGet('quizApi', `/scores?userId=${userId}`),
           apiGet('quizApi', '/leaderboard')
@@ -32,7 +30,6 @@ function Scores({ user }) {
         setScores(scoresData || []);
         setLeaderboard(leaderboardData || []);
       } catch (err) {
-        console.error('Error fetching scores:', err);
         setError(err.message || 'Failed to load scores');
       } finally {
         setLoading(false);
@@ -69,12 +66,12 @@ function Scores({ user }) {
             </div>
             <div className="stat">
               <span className="stat-number">
-                {Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)}%
+                {scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length) : 0}%
               </span>
               <span className="stat-label">Average Score</span>
             </div>
             <div className="stat">
-              <span className="stat-number">{Math.max(...scores.map(s => s.score))}%</span>
+              <span className="stat-number">{scores.length > 0 ? Math.max(...scores.map(s => s.score)) : 0}%</span>
               <span className="stat-label">Best Score</span>
             </div>
           </div>
@@ -83,7 +80,6 @@ function Scores({ user }) {
             {scores.map((score, index) => {
               const totalQuestions = score.answers ? Object.keys(score.answers).length : 0;
               const correctAnswers = Math.round((score.score / 100) * totalQuestions);
-              
               return (
                 <div key={`${score.userId}-${score.quizId}-${index}`} className="score-card">
                   <div className="score-header">
@@ -96,11 +92,9 @@ function Scores({ user }) {
                     {totalQuestions > 0 && (
                       <p><strong>Correct Answers:</strong> {correctAnswers} / {totalQuestions}</p>
                     )}
-                    <p>
-                      <strong>Completed:</strong> {new Date(score.completedAt).toLocaleString('en-US', {
-                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                      })}
-                    </p>
+                    <p><strong>Completed:</strong> {new Date(score.completedAt).toLocaleString('en-US', {
+                      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    })}</p>
                   </div>
                   <Link to={`/quizzes/${score.quizId}`} className="retake-btn">
                     Retake Quiz
@@ -112,7 +106,7 @@ function Scores({ user }) {
         </>
       )}
 
-      <h2>Leaderboard</h2>
+      <h2>Leaderboard (Top 10)</h2>
       {leaderboard.length === 0 ? (
         <p>No leaderboard data available yet.</p>
       ) : (
