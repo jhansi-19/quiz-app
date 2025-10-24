@@ -12,6 +12,7 @@ function Quiz({ user }) {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds per question
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -33,12 +34,24 @@ function Quiz({ user }) {
     fetchQuiz();
   }, [quizId]);
 
+  useEffect(() => {
+    if (!submitted && quiz && quiz.questions.length > 0 && timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft(prev => prev - 1);
+        if (timeLeft === 1) {
+          handleTimeUp();
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, submitted, quiz]);
+
   const handleOptionChange = (questionId, selectedOption) => {
     setAnswers(prev => ({ ...prev, [questionId]: selectedOption }));
   };
 
   const calculateScore = () => {
-    if (!quiz || !quiz.questions) return 0;
+    if (!quiz || !quiz.questions) return { correctCount: 0, totalQuestions: 0, percentage: 0 };
     let correctCount = 0;
     quiz.questions.forEach(question => {
       if (answers[question.questionId] === question.answer) correctCount++;
@@ -50,9 +63,17 @@ function Quiz({ user }) {
     };
   };
 
+  const handleTimeUp = () => {
+    const unanswered = quiz.questions.filter(q => !answers[q.questionId]);
+    if (unanswered.length > 0) {
+      alert(`Time's up! ${unanswered.length} question(s) unanswered. Submitting with current answers.`);
+    }
+    handleSubmit();
+  };
+
   const handleSubmit = async () => {
     const unansweredQuestions = quiz.questions.filter(q => !answers[q.questionId]);
-    if (unansweredQuestions.length > 0) {
+    if (unansweredQuestions.length > 0 && timeLeft > 0) {
       alert(`Please answer all questions. ${unansweredQuestions.length} question(s) remaining.`);
       return;
     }
@@ -83,7 +104,6 @@ function Quiz({ user }) {
       setSubmitted(true);
     } catch (err) {
       console.error('Error submitting score:', err);
-      console.error('Error details:', { message: err.message, name: err.name, stack: err.stack });
       setResult(scoreData);
       setSubmitted(true);
       const errorMsg = err.message || 'Unknown error';
@@ -114,7 +134,6 @@ function Quiz({ user }) {
             {result.correctCount} out of {result.totalQuestions} correct
           </p>
         </div>
-
         <div className="answers-review">
           <h3>Review Your Answers</h3>
           {quiz.questions.map((question, index) => {
@@ -148,7 +167,6 @@ function Quiz({ user }) {
             );
           })}
         </div>
-
         <div className="action-buttons">
           <button onClick={() => navigate('/scores')}>View All Scores</button>
           <button onClick={() => navigate('/')}>Back to Quizzes</button>
@@ -163,7 +181,8 @@ function Quiz({ user }) {
       <h2>{quiz.title || 'Quiz'}</h2>
       <p className="quiz-info">
         {quiz.questions.length} Questions | 
-        Answered: {Object.keys(answers).length}/{quiz.questions.length}
+        Answered: {Object.keys(answers).length}/{quiz.questions.length} | 
+        Time Left: {timeLeft}s
       </p>
       
       {quiz.questions.length === 0 ? (
