@@ -101,40 +101,25 @@ function Quiz({ user }) {
 
   const isQuestionCorrect = (question) => answers[question.questionId] === question.answer;
 
-  if (loading) return <div style={{ textAlign: 'center', fontSize: '18px', margin: '50px' }}>Loading quiz...</div>;
+  if (loading) return <div className="loading">Loading quiz...</div>;
   if (error) return (
-    <div style={{ textAlign: 'center', color: 'red', margin: '50px' }}>
+    <div className="error">
       <p>Error: {error}</p>
-      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>
+      <button onClick={() => navigate('/')} className="back-btn">
         Back to Quizzes
       </button>
     </div>
   );
-  if (!quiz) return <div style={{ textAlign: 'center', margin: '50px' }}>Quiz not found</div>;
+  if (!quiz) return <div className="error">Quiz not found</div>;
 
   if (submitted && result) return (
-    <div style={{ maxWidth: '800px', margin: '20px auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <style>{`
-        .results-container { background: #f8f9fa; padding: 20px; border-radius: 10px; }
-        .score-summary { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .score-percentage { font-size: 28px; font-weight: bold; color: #28a745; }
-        .answers-review { margin-top: 20px; }
-        .question-review { margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .correct { background-color: #d4edda; }
-        .incorrect { background-color: #f8d7da; }
-        .option-review { margin: 5px 0; padding: 5px; }
-        .correct-answer { background-color: #d4edda; font-weight: bold; }
-        .wrong-answer { background-color: #f8d7da; }
-        .badge { font-size: 12px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
-        .action-buttons button { margin: 5px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .action-buttons button:hover { background: #0056b3; }
-      `}</style>
+    <div className="quiz-container">
       <div className="results-container">
         <h2>Quiz Results</h2>
         <div className="score-summary">
           <h3>{quiz.title || 'Quiz'}</h3>
           <p className="score-percentage">Your Score: {result.percentage}%</p>
-          <p>{result.correctCount} out of {result.totalQuestions} correct</p>
+          <p className="score-detail">{result.correctCount} out of {result.totalQuestions} correct</p>
         </div>
         <div className="answers-review">
           <h3>Review Your Answers</h3>
@@ -145,24 +130,17 @@ function Quiz({ user }) {
               <div key={question.questionId} className={`question-review ${correct ? 'correct' : 'incorrect'}`}>
                 <h4>
                   Question {index + 1}: {question.question}
-                  <span className="badge" style={{ background: correct ? '#28a745' : '#dc3545', color: 'white' }}>
-                    {correct ? '✓ Correct' : '✗ Incorrect'}
-                  </span>
+                  <span className="badge">{correct ? '✓ Correct' : '✗ Incorrect'}</span>
                 </h4>
                 <div>
                   {question.options.map((option, optIndex) => {
                     const isUserAnswer = option === userAnswer;
                     const isCorrectAnswer = option === question.answer;
                     return (
-                      <div key={optIndex} className="option-review" style={{
-                        backgroundColor: isCorrectAnswer ? '#d4edda' : isUserAnswer && !correct ? '#f8d7da' : '#fff',
-                        padding: '5px',
-                        margin: '3px 0',
-                        borderRadius: '4px'
-                      }}>
+                      <div key={optIndex} className="option-review" data-correct={isCorrectAnswer} data-user={isUserAnswer && !correct}>
                         <span>{option}</span>
-                        {isCorrectAnswer && <span className="badge" style={{ background: '#28a745', color: 'white' }}>Correct Answer</span>}
-                        {isUserAnswer && !isCorrectAnswer && <span className="badge" style={{ background: '#dc3545', color: 'white' }}>Your Answer</span>}
+                        {isCorrectAnswer && <span className="badge">Correct Answer</span>}
+                        {isUserAnswer && !isCorrectAnswer && <span className="badge">Your Answer</span>}
                       </div>
                     );
                   })}
@@ -181,27 +159,14 @@ function Quiz({ user }) {
   );
 
   return (
-    <div style={{ maxWidth: '800px', margin: '20px auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <style>{`
-        .quiz-info { font-size: 1.1em; margin-bottom: 15px; color: #333; }
-        .time-left { color: ${timeLeft <= 10 ? 'red' : '#007bff'}; font-weight: bold; }
-        .questions-list { margin: 20px 0; }
-        .question-card { background: #f8f9fa; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        .option-label { display: block; margin: 8px 0; cursor: pointer; }
-        .option-label input { margin-right: 8px; }
-        .option-label.selected { background: #e3f2fd; padding: 5px; border-radius: 5px; }
-        .submit-container { text-align: center; margin-top: 20px; }
-        .submit-btn { background: #28a745; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
-        .submit-btn:disabled { background: #6c757d; cursor: not-allowed; }
-        .cancel-btn { background: #dc3545; color: white; padding: 12px 25px; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer; }
-      `}</style>
+    <div className="quiz-container">
       <h2>{quiz.title || 'Quiz'}</h2>
       <p className="quiz-info">
         {quiz.questions.length} Questions | 
         Answered: {Object.keys(answers).length}/{quiz.questions.length} | 
-        <span className="time-left">Time Left: {timeLeft}s</span>
+        <span className={timeLeft <= 10 ? 'time-warning' : 'time-left'}>Time Left: {timeLeft}s</span>
       </p>
-
+      
       {quiz.questions.length === 0 ? (
         <p>No questions available for this quiz.</p>
       ) : (
@@ -210,7 +175,7 @@ function Quiz({ user }) {
             {quiz.questions.map((question, index) => (
               <div key={question.questionId} className="question-card">
                 <h4>Question {index + 1}: {question.question}</h4>
-                <div>
+                <div className="options">
                   {question.options.map((option, optIndex) => (
                     <label 
                       key={optIndex} 
