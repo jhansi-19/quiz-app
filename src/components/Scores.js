@@ -117,7 +117,6 @@ function Scores({ user }) {
                 <th>Rank</th>
                 <th>User ID</th>
                 <th>Score</th>
-                <th>Date</th>
               </tr>
             </thead>
             <tbody>
