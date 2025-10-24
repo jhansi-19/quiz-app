@@ -126,7 +126,7 @@ function Scores({ user }) {
                   <td>{index + 1}</td>
                   <td>{entry.userId}</td>
                   <td>{entry.score}%</td>
-                  <td>{new Date(entry.completedAt).toLocaleDateString()}</td>
+                  
                 </tr>
               ))}
             </tbody>
