@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiGet } from '../aws-config'; // Adjust path as needed
+import { apiGet } from '../aws-config';
 import { Link } from 'react-router-dom';
 
 function QuizList({ user }) {
@@ -11,12 +11,9 @@ function QuizList({ user }) {
     const fetchQuizzes = async () => {
       try {
         const response = await apiGet('quizApi', '/quizzes');
-        console.log('API Response:', response);
         const data = await response.body.json();
-        console.log('Parsed Data:', data);
         setQuizzes(data);
       } catch (err) {
-        console.error('Error fetching quizzes:', err);
         setError(err.message);
       } finally {
         setLoading(false);
