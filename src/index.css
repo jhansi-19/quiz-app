@@ -103,6 +103,22 @@ footer {
   margin: 0 auto;
 }
 
+.quiz-info {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.time-left {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.time-warning {
+  color: #ff4444;
+  animation: blink 1s step-end infinite;
+}
+
 .question-card {
   margin-bottom: 20px;
   padding: 15px;
@@ -120,6 +136,12 @@ footer {
   cursor: pointer;
 }
 
+.option-label.selected {
+  background: #e3f2fd;
+  padding: 5px;
+  border-radius: 5px;
+}
+
 .submit-btn {
   background: #007bff;
   color: white;
@@ -131,35 +153,101 @@ footer {
   transition: background 0.3s ease;
 }
 
-.submit-btn:hover {
+.submit-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
   background: #0056b3;
 }
 
-.score-result {
-  text-align: center;
-}
-
-.success {
-  color: #28a745;
-}
-
-.fail {
-  color: #dc3545;
-}
-
-.back-btn {
-  background: #6c757d;
+.cancel-btn {
+  background: #dc3545;
   color: white;
   border: none;
-  padding: 10px 15px;
+  padding: 12px 20px;
   border-radius: 5px;
+  margin-left: 10px;
   cursor: pointer;
-  margin: 10px;
   transition: background 0.3s ease;
 }
 
-.back-btn:hover {
-  background: #5a6268;
+.cancel-btn:hover {
+  background: #c82333;
+}
+
+.results-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.score-summary {
+  background: #e9ecef;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.score-percentage {
+  font-size: 28px;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.score-detail {
+  margin: 5px 0;
+}
+
+.question-review {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.correct {
+  background-color: #d4edda;
+}
+
+.incorrect {
+  background-color: #f8d7da;
+}
+
+.option-review {
+  margin: 5px 0;
+  padding: 5px;
+}
+
+.correct-answer {
+  background-color: #d4edda;
+  font-weight: bold;
+}
+
+.wrong-answer {
+  background-color: #f8d7da;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.action-buttons button {
+  margin: 5px;
+  padding: 10px 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.action-buttons button:hover {
+  background: #0056b3;
 }
 
 /* Scores */
@@ -170,6 +258,31 @@ footer {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 800px;
   margin: 0 auto;
+}
+
+.scores-summary {
+  display: flex;
+  justify-content: space-around;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
 }
 
 .scores-list {
@@ -186,22 +299,99 @@ footer {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.pass {
+  background: #d4edda;
+  color: #155724;
+}
+
+.fail {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.retake-btn {
+  display: inline-block;
+  margin-top: 10px;
+  background: #007bff;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.retake-btn:hover {
+  background: #0056b3;
+}
+
 .no-scores {
   text-align: center;
   color: #666;
 }
 
-.loading, .error {
+.leaderboard-container {
+  margin-top: 30px;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  background: #f2f2f2;
+}
+
+.leaderboard-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.back-btn {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.loading,
+.error {
   text-align: center;
   font-size: 18px;
   color: #666;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
   }
-  .quiz-cards, .scores-list {
+  .quiz-cards,
+  .scores-list {
     grid-template-columns: 1fr;
   }
 }
