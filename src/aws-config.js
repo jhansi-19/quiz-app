@@ -83,12 +83,13 @@ const switchToSecondary = () => {
 
 // Enhanced error detection
 const shouldFailover = (error) => {
-  if (error.name === 'NetworkError' || error.message?.includes('Network')) return true; // Covers CORS-related errors
+  if (error.name === 'NetworkError' || error.message?.includes('Network')) return true;
   if (error.name === 'TimeoutError' || error.message?.includes('timeout') || error.code === 'ETIMEDOUT') return true;
-  if (error.response?.statusCode >= 500 || error.response?.statusCode === 502||error.response?.statusCode===400) return true; // Explicitly handle 502
+  if (error.response?.statusCode >= 500 || error.response?.statusCode === 502 || error.response?.statusCode === 400) return true;
   if (error.message?.includes('ECONNREFUSED') || error.message?.includes('Failed to fetch')) return true;
   if (error.response?.statusCode === 503) return true;
-  if (error.response?.statusCode === 403 && error.message?.includes('Missing Authentication')) return false;
+  if (error.name === 'UserPoolNotFoundException' || error.name === 'NotAuthorizedException' || error.name === 'InvalidParameterException') return true;
+  if (error.response?.statusCode === 403 && error.message?.includes('Missing Authentication')) return false; // Exclude auth token issues
   return false;
 };
 
